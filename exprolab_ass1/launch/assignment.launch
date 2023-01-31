@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<launch>
+    
+    <!-- node armor -->
+   <node pkg="armor" type="execute" name="armor_service" args="it.emarolab.armor.ARMORMainService"/> 
+    
+<node name="create_hypotesis"  pkg="exprolab_ass1" type="create_hypotesis.py" output="screen"/> 
+<node name="FSM"  pkg="exprolab_ass1" type="FSM.py" output="screen"/> 
+
+</launch>
