@@ -1,13 +1,13 @@
 #! /usr/bin/env python
 
-## @package exprob_assignment3
+## @package exprob_assignment1
 #
 #  \file hint.py
 #  \brief This program elaborates the hints received
 #
-#  \author Zoe Betta
+#  \author Lorenzo Morocutti
 #  \version 1.0
-#  \date 12/06/2022
+#  \date 12/12/2023
 #  \details
 #  
 #  Subscribes to: <BR>
@@ -18,7 +18,7 @@
 #
 #  Services: <BR>
 #       /hint
-#		/checkcomplete
+#		/check
 #		/result
 #
 #  Client Services: <BR>
@@ -47,6 +47,7 @@ from armor_msgs.srv import *
 #from exprob_assignment3.srv import Marker, MarkerResponse
 from exprolab_ass1.srv import hint, hintResponse
 from exprolab_ass1.srv import correct_hyp,correct_hypResponse
+from exprolab_ass1.srv import print_res, print_resRequest, print_resResponse
 #from exprob_assignment3.srv import Results, ResultsResponse
 
 #global variables
@@ -80,13 +81,10 @@ def main():
   rospy.wait_for_service('armor_interface_srv')
   # definition for the Server on the topic /hint
   service=rospy.Service('/hint', hint, hint_clbk)
-  # definition of the Server on the topic /checkcomplete
+  # definition of the Server on the topic /check
   service=rospy.Service('/check', correct_hyp, check_complete_consistent)
-  # definition of the Server on the topic /results
-  #service=rospy.Service('/results', Results, results)
-  # definition of the publisher on the topic /complete
-  #pub = rospy.Publisher('/complete', String, queue_size=10)
   #print('inizializzato tutto')
+  res_service=rospy.Service('/print_result', print_res, print_clbk)
   # load the ontology from the ontology file
   load_ontology()
   rospy.spin() 
@@ -103,17 +101,17 @@ def main():
 #   identified by the ID that is sent as a request. 
 #   The fields are retrieved in the armor server and sent back on the response.
 #	
-def results(req):
+def print_clbk(req):
 	# I initialize the response variable
-    resp=ResultsResponse()
+    resp=print_resResponse()
     # save the value retrieved in the field what in a temporary variable
-    what=str(look_hypothesis(str(req.id), 'what')[0])
+    what=str(look_hypothesis(str(req.ID), 'what')[0])
     # save the value retrieved in the field who in a temporary variable
-    who=str(look_hypothesis(str(req.id), 'who')[0])
+    who=str(look_hypothesis(str(req.ID), 'who')[0])
     # put the value for who in the response message
     resp.who=who
     # save the value retrieved in the field where in a temporary variable
-    where=str(look_hypothesis(str(req.id), 'where')[0])
+    where=str(look_hypothesis(str(req.ID), 'where')[0])
     # put the value for what in the response message
     resp.what=what
     # put the value for where in the response message

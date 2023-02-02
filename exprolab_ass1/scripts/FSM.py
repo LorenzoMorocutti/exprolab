@@ -8,18 +8,29 @@ import time
 import random
 from exprolab_ass1.srv import hint, hintRequest, hintResponse
 from exprolab_ass1.srv import correct_hyp, correct_hypRequest, correct_hypResponse
-
-
-possible_hint = [ [1, 'who', 'Lorenzo'] , [1, 'what', 'can'] , [1, 'where', 'Kitchen'] ,
-                  [2, 'who', 'Ciro'] , [2, 'what', 'knife'] ,
-                  [3, 'who', 'Laura'] , [3, 'what', 'shotgun'] , [3, 'where', 'Livingroom'] , [3, 'where', 'Bedroom'] , 
-                  [4, 'who', 'Zoe'] , [4, 'what', 'poison'] , [4, 'where', 'Bathroom'] ]
-
+from exprolab_ass1.srv import result, resultRequest, resultResponse
+from std_msgs.msg import Bool
+from exprolab_ass1.msg import ErlOracle
 
 id_win = 1
 
 hint_client=None
 check_client=None
+room_pub=None
+
+hyp_checked=[]
+hyp_received=[]
+
+
+def hint_callback(msg):
+    req = hintRequest()
+    req.ID = msg.ID
+    req.key = msg.key
+    req.value = msg.value
+    hint_client(req)
+    print("I received a hint")
+    #print(str(req.ID) + req.key + req.value)'''
+
 
 # define state Unlocked
 class Goto_new_room(smach.State):
@@ -45,28 +56,31 @@ class Look_for_hint(smach.State):
                              outcomes=['Goto_new_room','Go_home'])
         
     def execute(self, userdata):
+        global hyp_received, hyp_checked
+        completed = False
         # function called when exiting from the node, it can be blacking
-        rand = random.randrange(11)
-        hint_to_send = possible_hint[rand]
-        req = hintRequest()
-        req.ID = hint_to_send[0] 
-        req.key = hint_to_send[1]
-        req.value = hint_to_send[2]
-        hint_client(req)
-        print("I'm in look for hint")
-        print(str(req.ID) + req.key + req.value)
-        
+        room_pub.publish(True)
+        #wait to see if any hint received
 
+        rospy.sleep(2)
+        
+        #see if given the new hint/hints there is a good hyp
         req_h = correct_hypRequest()
         res_h = correct_hypResponse()
-
+    
         res_h = check_client(req_h)
-        #print(res_h)
-        
-        if res_h.hypotesis == '':
-            completed = False
-        else:
-            completed = True
+        temp = res_h.hypotesis.split("/")
+        temp.remove("")
+        print(temp)
+        hyp_received.clear()
+
+        for i in range(len(temp)):
+            temp[i] = int(temp[i])
+            hyp_received.append(temp[i])
+
+        for i in hyp_received:
+            if not (i in hyp_checked):
+                completed = True            
 
         if completed:
             return 'Go_home'
@@ -97,8 +111,24 @@ class Check_result(smach.State):
     def execute(self, userdata):
         # function called when exiting from the node, it can be blacking
 
+        req=resultRequest()
+        res=resultResponse()
+
         print("I'm in check result")
-        correct = True
+
+        for i in hyp_received:
+            if not (i in hyp_checked):
+                req.ID = i 
+                hyp_checked.append(i)
+                break
+
+        res = result_client(req) 
+
+        if res.win == True:
+            correct = True
+            rospy.loginfo("The killer was "+res.who+" in the "+res.where+" with the "+res.what)
+        else:
+            correct = False 
 
         if correct:
             return 'Goal'
@@ -110,11 +140,19 @@ def main():
 
     global hint_client
     global check_client
+    global room_pub, result_client
     hint_client= rospy.ServiceProxy("/hint", hint)
     rospy.wait_for_service('/hint')
 
     check_client= rospy.ServiceProxy("/check", correct_hyp)
     rospy.wait_for_service('/check')
+
+    result_client= rospy.ServiceProxy("/result", result)
+    rospy.wait_for_service('/result')
+    
+    room_pub = rospy.Publisher('/newroom', Bool, queue_size=10)
+
+    rospy.Subscriber("/hint", ErlOracle, hint_callback)
     # Create a SMACH state machine
     sm = smach.StateMachine(outcomes=['Goal'])
     sm.userdata.sm_counter = 0
