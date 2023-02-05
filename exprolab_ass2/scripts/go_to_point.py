@@ -21,7 +21,7 @@ pub_ = None
 # parameters for control
 yaw_precision_ = math.pi / 9  # +/- 20 degree allowed
 yaw_precision_2_ = math.pi / 90  # +/- 2 degree allowed
-dist_precision_ = 0.1
+dist_precision_ = 0.05
 kp_a = -3.0 
 kp_d = 0.2
 ub_a = 0.6

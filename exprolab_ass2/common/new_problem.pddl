@@ -6,8 +6,8 @@
     start - home
 )
 (:init
-    (isat robot w3)
 
+    (ishome robot start)
 
 
 

@@ -60,6 +60,9 @@ output="screen">
 <param name="action_feedback_topic" value="action_feedback" />
 </node>
 
+<node name="create_hypotesis" pkg="exprolab_ass2" type="create_hypotesis.py" respawn="false" output="screen" >
+</node>
+
 <!-- <include file="$(find rosplan_planning_system)/launch/includes/simulated_action.launch"> 
 <arg name="pddl_action_name" value="move_to"/>
 </include> -->
@@ -111,11 +114,17 @@ output="screen">
 <param name="action_feedback_topic" value="/rosplan_plan_dispatcher/action_feedback" />
 </node>
 
-
+<node name="rosplan_interface_checkresult" pkg="exprolab_ass2" type="checkresult" respawn="false" output="screen">
+<param name="knowledge_base" value="rosplan_knowledge_base" />
+<param name="pddl_action_name" value="check_result" />
+<param name="action_dispatch_topic" value="/rosplan_plan_dispatcher/action_dispatch" />
+<param name="action_feedback_topic" value="/rosplan_plan_dispatcher/action_feedback" />
+</node>
+<!-- 
 <include file="$(find rosplan_planning_system)/launch/includes/simulated_action.launch"> 
 <arg name="pddl_action_name" value="check_result"/>
 <arg name="action_probability" value="0.7"/>
-</include>
+</include> -->
 
 <node name="generation_problem" pkg="exprolab_ass2" type="generation_problem.py" respawn="false" output="screen">
 </node>

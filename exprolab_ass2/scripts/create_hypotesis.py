@@ -45,9 +45,9 @@ from std_msgs.msg import String, Int32
 from armor_msgs.msg import * 
 from armor_msgs.srv import * 
 #from exprob_assignment3.srv import Marker, MarkerResponse
-from exprolab_ass1.srv import hint, hintResponse
-from exprolab_ass1.srv import correct_hyp,correct_hypResponse
-from exprolab_ass1.srv import print_res, print_resRequest, print_resResponse
+from exprolab_ass2.srv import hint, hintResponse
+from exprolab_ass2.srv import correct_hyp,correct_hypResponse
+from exprolab_ass2.srv import print_res, print_resRequest, print_resResponse
 #from exprob_assignment3.srv import Results, ResultsResponse
 
 #global variables
@@ -59,6 +59,8 @@ pub= None
 complcons=[]
 retrievedId=[]
 oracle_service = None
+temp_int=[]
+publish_hyp=None
 
 #change 'place' with 'location'
 
@@ -72,7 +74,7 @@ oracle_service = None
 #   reason on the hints.
 #	
 def main():
-  global  armor_service, pub, oracle_service
+  global  armor_service, pub, oracle_service, publish_hyp
   rospy.init_node('node_hint')
   # definition of the Client for the Server on the topic armor_interface_srv
   armor_service = rospy.ServiceProxy('armor_interface_srv', ArmorDirective)
@@ -85,6 +87,7 @@ def main():
   service=rospy.Service('/check', correct_hyp, check_complete_consistent)
   #print('inizializzato tutto')
   res_service=rospy.Service('/print_result', print_res, print_clbk)
+  publish_hyp = rospy.Publisher('complete_hypotesis', Int32, queue_size=10)
   # load the ontology from the ontology file
   load_ontology()
   rospy.spin() 
@@ -132,9 +135,10 @@ def print_clbk(req):
 #   complete and not inconsistent
 def check_complete_consistent(req):
     try:
+        global temp_int, publish_hyp
+
         completed=[]
         inconsistent=[]
-        temp=""
         # set the request for the armor server check all the completed hypothesis
         req=ArmorDirectiveReq()
         req.client_name= 'tutorial'
@@ -167,16 +171,26 @@ def check_complete_consistent(req):
         inconsistent=res_final
         # if the hypothesis is completed AND inconsistent return 1
         # for every element in the array completed
-       
+        rospy.loginfo(completed)  
+        rospy.loginfo(inconsistent)  
         for i in completed:
             find = False
             for j in inconsistent:
                 if i == j:
                     find = True
             if find == False:
-                temp = temp + "/" + i
-            
-        return temp
+                #temp = temp + "/" + i
+                temp_int.append(i)
+        rospy.loginfo(temp_int)    
+        if(len(temp_int) == 0):
+            return False
+        else:
+            rospy.loginfo("the hypotesis to check is")
+            for k in temp_int:
+                rospy.loginfo(k)
+                publish_hyp.publish(int(k))
+            return True
+
 
     except rospy.ServiceException as e:
         print(e)

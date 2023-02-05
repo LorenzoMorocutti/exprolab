@@ -37,11 +37,14 @@ bool CheckhintInterface::concreteCallback(const rosplan_dispatch_msgs::ActionDis
 
 void receive_clbk(const exprolab_ass2::ErlOracle msg)
 {
+    
+    ros::NodeHandle n1;
+    ros::ServiceClient hint_client = n1.serviceClient<exprolab_ass2::hint>("/hint");
     exprolab_ass2::hint req;
     req.request.ID = msg.ID;
     req.request.key = msg.key;
     req.request.value = msg.value;
-
+    ROS_INFO("dovrei mandaee request");
     hint_client.call(req);
     received = true;
 }
@@ -113,8 +116,6 @@ int main(int argc, char **argv) {
     ros::NodeHandle nh("~");
     ros::Subscriber receive_hint = nh.subscribe("/oracle_hint", 1000, receive_clbk);
     
-    ros::NodeHandle n1;
-    ros::ServiceClient hint_client = n1.serviceClient<exprolab_ass2::hint>("/hint");
     KCL_rosplan::CheckhintInterface my_aci(nh);
     my_aci.runActionInterface();
     return 0;
