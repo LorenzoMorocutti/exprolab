@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<launch>
+<node name="gotopoint" pkg="exprolab_ass2" type="go_to_point.py" respawn="false" >
+</node>
+<node name="create_hypotesis" pkg="exprolab_ass2" type="create_hypotesis.py" respawn="false" >
+</node>
+<node pkg="armor" type="execute" name="armor_service" args="it.emarolab.armor.ARMORMainService"/> 
+    <include file="$(find exprolab_ass2)/launch/assignment.launch"/>
+    <include file="$(find exp_moveit)/launch/demo_gazebo.launch"/>
+    <include file="$(find exprolab_ass2)/launch/planner.launch"/>
+
+</launch>
