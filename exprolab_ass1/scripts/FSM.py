@@ -1,5 +1,41 @@
 #!/usr/bin/env python
 
+## @package exprolab_ass1
+#
+#  \file FSM.py
+#  \brief Node that implements the smach state machine for the first assignment 
+#
+#  \author Lorenzo Morocutti
+#  \version 1.0
+#  \date 12/2/2023
+#  \details
+#  
+#  Subscribes to: <BR>
+#       /hint(ErlOracle.msg)
+#
+#  Publishes to: <BR>
+#		/newroom(boolean)
+#
+#  Services: <BR>
+#       None
+#
+#  Client Services: <BR>
+#       /hint
+#		/check
+#		/result
+#
+#  Action Services: <BR>
+#       None
+#
+#  Description: <BR>
+#    This node implements the the finite state machine, with the smach library, that
+#    manage the overall application. The logic is developed in four states and it's
+#    very simple: I go to a new room (independently of where I am, in this case); then I 
+#    look for a hint; if I have enough hint, I go home and try to make a hypotesys;
+#    if the hypotesis is consistent and complete, I try to guess the killer, where 
+#    the murder has happened and with which weapon.
+
+
 import roslib
 import rospy
 import smach
@@ -23,17 +59,30 @@ hyp_received=[]
 
 
 def hint_callback(msg):
+
+##
+# \brief function that receives a hint
+# \param: msg of type EarloOracle.msg 
+# \return: None
+# This function make a hint request and saves the fields in the variable req
+
     req = hintRequest()
     req.ID = msg.ID
     req.key = msg.key
     req.value = msg.value
     hint_client(req)
     print("I received a hint")
-    #print(str(req.ID) + req.key + req.value)'''
 
 
-# define state Unlocked
+
 class Goto_new_room(smach.State):
+
+##
+# \brief this class simulates the Go_to_new_room action
+# \param: None 
+# \return: the next state
+# This class simulates the action of going to a new room, in brief it's just a sleep()
+
     def __init__(self):
         # initialisation function, it should not wait
         smach.State.__init__(self, 
@@ -41,27 +90,36 @@ class Goto_new_room(smach.State):
         
     def execute(self, userdata):
         # function called when exiting from the node, it can be blacking
-        time.sleep(1)
+        time.sleep(5)
         rospy.loginfo('Reached a new room! \n')
 
         return 'Look_for_hint'
 
 
 
-# define state Unlocked
 class Look_for_hint(smach.State):
+
+##
+# \brief this class simulates the Looking_for_hint action
+# \param: None 
+# \return: the possible next state
+# This class simulates the action of looking for a hint, in brief it receives the
+# hints and check if there is a good hypotesis (in this case I will go to check results)
+
     def __init__(self):
         # initialisation function, it should not wait
         smach.State.__init__(self, 
                              outcomes=['Goto_new_room','Go_home'])
         
     def execute(self, userdata):
+        # function called when exiting from the node, it can be blacking
         global hyp_received, hyp_checked
         completed = False
-        # function called when exiting from the node, it can be blacking
-        room_pub.publish(True)
-        #wait to see if any hint received
 
+        #publish that I have arrived in a new room
+        room_pub.publish(True)
+       
+        #wait to see if any hint received
         rospy.sleep(2)
         
         #see if given the new hint/hints there is a good hyp
@@ -71,13 +129,15 @@ class Look_for_hint(smach.State):
         res_h = check_client(req_h)
         temp = res_h.hypotesis.split("/")
         temp.remove("")
-        print(temp)
+        #print(temp)
         hyp_received.clear()
 
+        #save the hints received in an array
         for i in range(len(temp)):
             temp[i] = int(temp[i])
             hyp_received.append(temp[i])
 
+        #if the hypotesis is complete I can check if it's the right answer
         for i in hyp_received:
             if not (i in hyp_checked):
                 completed = True            
@@ -89,6 +149,13 @@ class Look_for_hint(smach.State):
     
 
 class Go_home(smach.State):
+
+##
+# \brief this class simulates the Going_home action
+# \param: None 
+# \return: the possible next state
+# This class simulates the action of going home, in brief it's equal to the go_to_new_room
+
     def __init__(self):
         # initialisation function, it should not wait
         smach.State.__init__(self, 
@@ -103,6 +170,14 @@ class Go_home(smach.State):
 
 
 class Check_result(smach.State):
+
+##
+# \brief this class simulates the Checking_result action
+# \param: None 
+# \return: the next state or exit
+# This class simulates the action of checking the results, in brief it's just a request
+# to check if the complete hypotesis found is the winning one. IF it's not, I go to a new room
+
     def __init__(self):
         # initialisation function, it should not wait
         smach.State.__init__(self, 
@@ -110,20 +185,23 @@ class Check_result(smach.State):
         
     def execute(self, userdata):
         # function called when exiting from the node, it can be blacking
-
+ 
         req=resultRequest()
         res=resultResponse()
 
-        print("I'm in check result")
+        #print("I'm in check result")
 
+        #if I have already checked an hypotesis, I don't need to check it again
         for i in hyp_received:
             if not (i in hyp_checked):
                 req.ID = i 
                 hyp_checked.append(i)
                 break
 
+        #send a check request about the complete hyp I have
         res = result_client(req) 
 
+        #if it's the winner I print the result
         if res.win == True:
             correct = True
             rospy.loginfo("The killer was "+res.who+" in the "+res.where+" with the "+res.what)
