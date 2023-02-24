@@ -201,7 +201,7 @@ def add_owl(name, class_type):
 #	\return : None
 # 	
 #	 This function adds one hint to the ontology, translating it in the owl formalism.
-#    First controls the class of the entity, then it adds it to the ontology thanks to another
+#    First controls the class of the entity, then it adds it to the ontology thanks to an
 #    armor command. In the end it reasons, to create all the dependencies of the ontology
 #    with the disjuncted property (we have to explicitly say two entities are separate). 
 
@@ -254,49 +254,215 @@ def correspondent_type(class_type):
         return 'LOCATION' 
 
 
-##
-#	\brief This function implements the /results server
-#	\param : req: it is an integer that contains the ID of an hypothesis
-#	\return : resp: it is composed of three strings, one for each  field of the hypothesis	
-#   This server retrieves the field of a requested hypothesis,
-#   identified by the ID that is sent as a request. 
-#   The fields are retrieved in the armor server and sent back on the response.
-	
-def print_clbk(req):
-	# I initialize the response variable
-    resp=print_resResponse()
-    # save the value retrieved in the field what in a temporary variable
-    what=str(look_hypothesis(str(req.ID), 'what')[0])
-    # save the value retrieved in the field who in a temporary variable
-    who=str(look_hypothesis(str(req.ID), 'who')[0])
-    # put the value for who in the response message
-    resp.who=who
-    # save the value retrieved in the field where in a temporary variable
-    where=str(look_hypothesis(str(req.ID), 'where')[0])
-    # put the value for what in the response message
-    resp.what=what
-    # put the value for where in the response message
-    resp.where=where
-    return resp
-	
 
-	
-	
+
+
+def check_owl(ID,class_type,name):
+
 ##
-#	\brief It checks if there is at least one hypothesis complete and not inconsistent
-#	\param None
-#	\return : returns 1 if the hypothesis is complete and not inconsistent
-#    returns 0 if it is either incomplete or inconsistent.
+#	\brief It checks if the istance is already in the ontology
+#	\param ID: string, ID of the hypothesis I want to check 
+#	\param class_type: string, the type of instance I want to check
+#       if already present
+#	\param name : string, the name of the entity to check
+#	\return : None
 # 	
-#	This function calls the armor server twice, the first time it retrieves all
-#   the complete hypothesis and it checks if there is at least one hypothesis that is
-#   complete and not inconsistent
-def check_complete_consistent(req):
+#	This function checks if a hint is already present in the ontology. 
+#   If it is not there it's been added.
+
     try:
+        # it retrieves from the ID the class_type
+        retrieve=look_for_hyp(ID, class_type)
+        find = False
+        # if the name retrieved isn't there I add the hypothesis 
+        for i in retrieve:
+
+            if i == name:
+                find = True
+
+        if find == False:
+            add_hyp(ID,class_type,name)
+            reason()
+    except rospy.ServiceException as e:
+        print(e)   
+
+
+
+
+
+def add_hyp(ID,class_type,name):
+
+##
+#	\brief This function adds an hyp to the ontology
+#	\param ID : string, the ID of the hypothesis to be added
+#	\param class_type : string, represents the type of information
+#   \param name : string, it's the information
+#	\return : None
+# 	
+#   This function expoits, again, the Armor server to add an hyp (we give 
+#   all the information about it, for the args)
+
+    try:
+        # request to the armor server
+        req=ArmorDirectiveReq()
+        req.client_name= 'tutorial'
+        req.reference_name= 'ontoTest'
+        req.command= 'ADD'
+        req.primary_command_spec= 'OBJECTPROP'
+        req.secondary_command_spec= 'IND'
+        req.args= [class_type,ID,name]
+        # send request
+        msg = armor_service(req)
+        res=msg.armor_response
+    except rospy.ServiceException as e:
+        print(e)
+
+
+
+
+
+def look_for_hyp(ID,class_type):
+
+##
+#	\brief It retrieves from a ID a field
+#	\param ID : string; it represents the hypotesis I want to check 
+#   \param class_type : the characteristic I want to retrieve
+#	\return : retrieve, string, intuitively the name of the entity I retrieved
+# 	
+#	This funciton calls the armor server to see the hypothesis relative
+#   to a field, identified by the ID.
+
+    try:
+        # request to armor server to check the field class_type of an hypothesis
+        req=ArmorDirectiveReq()
+        req.client_name= 'tutorial'
+        req.reference_name= 'ontoTest'
+        req.command= 'QUERY'
+        req.primary_command_spec= 'OBJECTPROP'
+        req.secondary_command_spec= 'IND'
+        req.args= [class_type,ID]
+
+        # send the request
+        msg = armor_service(req)
+
+        # save response
+        res=msg.armor_response.queried_objects
+
+        # remove the useless parts from the retrieving
+        retrieve=remove_queries(res)
+        return retrieve
+    except rospy.ServiceException as e:
+        print(e)      
+
+
+
+
+def remove_queries(owl_res):
+
+##
+#	\brief This function removes the query from the retrieves from the ontology
+#	\param owl_res: the response from the Armor server
+#	\return : owl_res, the cleaned response
+# 	
+#	This function splits the string, received as input, at the character '#' 
+#   and saves only the part after that. The received string is something like 
+#   <http://www.emarolab.it/cluedo-ontology#hammer> (we want to extract 'hammer', 
+#   without the '>')
+
+    for i in range(len(owl_res)):
+        # we use an intermediate temporary variable
+        temp=owl_res[i]
+        # split at '#'
+        temp=temp.split('#')
+        # save the lenght of the array (it's equal to 2)
+        index=len(temp)
+        # take only the second element (hammer>) 
+        temp=temp[index-1]
+        # overwriting the one received, eliminating '>'
+        owl_res[i]=temp[:-1]
+        
+    return owl_res
+
+
+
+
+      
+
+def reason():
+
+##
+#	\brief this function calls the reasoner for the ontology
+#	\param : None
+#	\return : None
+# 	
+#	 This function calls the armor server to run the reasoner, which
+#    task is to explicit all the relations between the istances in the ontology 
+
+    try:
+        # request to armor server to run the reasoner
+        req=ArmorDirectiveReq()
+        req.client_name= 'tutorial'
+        req.reference_name= 'ontoTest'
+        req.command= 'REASON'
+        req.primary_command_spec= ''
+        req.secondary_command_spec= ''
+        req.args= []
+        # send request
+        msg = armor_service(req)
+        res=msg.armor_response
+    except rospy.ServiceException as e:
+        print(e)
+
+
+
+
+ 
+def disjoint(id_class):
+
+##
+#	\brief This function calls the disjoint function
+#	\param id_class : string, the class of the elements I want to do the disjoint
+#	\return : None
+# 	
+#	This function calls the armor server to do a disjoint of all the elements 
+#   belonging to the class passed as argument
+
+    try:
+        # request to the armor server to use the disjoint
+        req=ArmorDirectiveReq()
+        req.client_name= 'tutorial'
+        req.reference_name= 'ontoTest'
+        req.command= 'DISJOINT'
+        req.primary_command_spec= 'IND'
+        req.secondary_command_spec= 'CLASS'
+        req.args= [id_class]
+        # send request
+        msg = armor_service(req)		 
+    except rospy.ServiceException as e:
+        print(e) 
+
+
+
+
+
+
+def check_complete_consistent(req):
+
+##
+#	\brief Callback function to check if there is at least one hyp complete and consistent
+#	\param req, a boolean
+#	\return : returns a string of the complete and consistent hyps separate by a '/'
+# 	
+#	This function calls the armor server two times: first time to retrieve the
+#   complete hypothesis; second to check if there is at least one hyp 
+#   complete and consistent
+
+    try:
+        # init of the arrays
         completed=[]
         inconsistent=[]
         temp=""
-        # set the request for the armor server check all the completed hypothesis
+        # first request to the armor server
         req=ArmorDirectiveReq()
         req.client_name= 'tutorial'
         req.reference_name= 'ontoTest'
@@ -304,14 +470,16 @@ def check_complete_consistent(req):
         req.primary_command_spec= 'IND'
         req.secondary_command_spec= 'CLASS'
         req.args= ['COMPLETED']
-        # send the request
+        # send request
         msg = armor_service(req)
-        # save the response of the server
+        # save response
         res=msg.armor_response.queried_objects
-        # clean the results by removing usless parts
-        res_final=clean_queries(res)
-        completed=res_final
-        # set the request for the armor server check all the inconsistent hypothesis
+        
+        # clean the responses by removing usless parts
+        retrieve=remove_queries(res)
+        completed=retrieve
+
+        # second request to the armor server
         req=ArmorDirectiveReq()
         req.client_name= 'tutorial'
         req.reference_name= 'ontoTest'
@@ -319,16 +487,17 @@ def check_complete_consistent(req):
         req.primary_command_spec= 'IND'
         req.secondary_command_spec= 'CLASS'
         req.args= ['INCONSISTENT']
-        # send the request
+        # send request
         msg = armor_service(req)
-        # save the response of the server
+        # save response 
         res=msg.armor_response.queried_objects
+        
         # clean the results by removing usless parts
-        res_final=clean_queries(res)
-        inconsistent=res_final
-        # if the hypothesis is completed AND inconsistent return 1
-        # for every element in the array completed
-       
+        retrieve=remove_queries(res)
+        inconsistent=retrieve
+        
+        # if the hypothesis is completed and not inconsistent saves
+        # the id of the hyp in the array completed
         for i in completed:
             find = False
             for j in inconsistent:
@@ -341,167 +510,38 @@ def check_complete_consistent(req):
 
     except rospy.ServiceException as e:
         print(e)
+
+
+
+
+
 	
+def print_clbk(req):
+
+##
+#	\brief Callback function to send the possible final result to print
+#	\param : req: integer that represents the ID the hyp
+#	\return : res: it is composed of three strings, one for each  field of the hypothesis	
+#   This fucntion retrieves the fields of a requested hypothesis, supposedly the winning one 
+
+	# init of the response variable
+    res=print_resResponse()
+    # retrieve the value of the field 'what'
+    what=str(look_for_hyp(str(req.ID), 'what')[0])
+    # put the value for 'what' in the response
+    res.what=what
+
+    # retrieve the value of the field 'who'
+    who=str(look_for_hyp(str(req.ID), 'who')[0])
+    # put the value for 'who' in the response
+    res.who=who
+
+    # retrieve the value of the field 'where'
+    where=str(look_for_hyp(str(req.ID), 'where')[0])
+    # put the value for 'where' in the response
+    res.where=where
+    return res
 	
- 
-
-##
-#	\brief this function updates the ontology
-#	\param : None
-#	\return : None
-# 	
-#	 This function calls the armor server in order to run the reasoner
-#    and make implicit knowledge explicit       
-def reason():
-    try:
-        # set the request for the armor server to use the reasoner
-        req=ArmorDirectiveReq()
-        req.client_name= 'tutorial'
-        req.reference_name= 'ontoTest'
-        req.command= 'REASON'
-        req.primary_command_spec= ''
-        req.secondary_command_spec= ''
-        req.args= []
-        # send the request
-        msg = armor_service(req)
-        res=msg.armor_response
-    except rospy.ServiceException as e:
-        print(e)		
- 
-##
-#	\brief This function specifies that all elements of a class are different
-#	\param class : of type string it is the class of which element I want to make disjoint
-#	\return : None
-# 	
-#	This function calls the armor server and by sending specific commands it
-#   specifies that all entities inside the class passed as parameter are 
-#   disjoint and different   
-def disjoint(id_class):
-    try:
-        # set the request for the armor server to use the reasoner
-        req=ArmorDirectiveReq()
-        req.client_name= 'tutorial'
-        req.reference_name= 'ontoTest'
-        req.command= 'DISJOINT'
-        req.primary_command_spec= 'IND'
-        req.secondary_command_spec= 'CLASS'
-        req.args= [id_class]
-        # send the request
-        msg = armor_service(req)		 
-    except rospy.ServiceException as e:
-        print(e)        
-
-##
-#	\brief This function cleans the query returned from the ontology
-#	\param query: the list of strings that needs to be cleaned
-#	\return : query, the cleaned query
-# 	
-#	This function, for each element of the list passed as input it splits
-#   the strings at the char '#' and takes only what is after. Then it removes
-#   the last element of the remaing string. The received query is of type 
-#   <http://www.emarolab.it/cluedo-ontology#rope> and in this example
-#   we want to extract rope
-def clean_queries(query):
-    # for every element of the list received as input 
-    for i in range(len(query)):
-        temp=query[i]
-        # split at the character '#'
-        temp=temp.split('#')
-        # save the lenght of the list returned after the split
-        index=len(temp)
-        # take only the last element ( lenght -1 ) 
-        temp=temp[index-1]
-        # saves it in the query, overwriting the one received and 
-        # eliminating the last character
-        query[i]=temp[:-1]
-    return query
-
-         
-
-##
-#	\brief This function adds an hypothesis to the ontology
-#	\param ID : of type string it is the ID of the hypothesis I want to add to
-#	\param class_type : string representing the type of information I want to add
-#   \param name : of type string it is the name of the information I want to add
-#	\return : None
-# 	
-#	By calling the armor server with the proper commands I add an entity to
-#   a given hypothesis. 
-def add_hypothesis(ID,class_type,name):
-    try:
-        # set the request for the armor server to add an entity to an hypothesis
-        req=ArmorDirectiveReq()
-        req.client_name= 'tutorial'
-        req.reference_name= 'ontoTest'
-        req.command= 'ADD'
-        req.primary_command_spec= 'OBJECTPROP'
-        req.secondary_command_spec= 'IND'
-        req.args= [class_type,ID,name]
-        # send the request
-        msg = armor_service(req)
-        res=msg.armor_response
-    except rospy.ServiceException as e:
-        print(e)	
-
-##
-#	\brief It retrieves from an hypothesis a field
-#	\param ID : of string type it is the hypothesis I want to check 
-#   \param class_type : the property of the hypothesis that I want to retrieve
-#	\return : res_final a string with the name of the entity I retrieved
-# 	
-#	This funciton calls the armor server to see in a given hypothesis identified
-#   by its ID one field, identified by the class_type.
-def look_hypothesis(ID,class_type):
-    try:
-        # set the request for the armor server to check one field (identified by class_type)
-        # of an hypothesis (identified by an ID)
-        req=ArmorDirectiveReq()
-        req.client_name= 'tutorial'
-        req.reference_name= 'ontoTest'
-        req.command= 'QUERY'
-        req.primary_command_spec= 'OBJECTPROP'
-        req.secondary_command_spec= 'IND'
-        req.args= [class_type,ID]
-        # send the request
-        msg = armor_service(req)
-        # save the response of the server
-        res=msg.armor_response.queried_objects
-        #print(res)
-        # clean the results by removing usless parts
-        res_final=clean_queries(res)
-        return res_final
-    except rospy.ServiceException as e:
-        print(e)   
-
-##
-#	\brief It checks if the hint received is already saved in the hypothesis
-#	\param ID: of type string, the ID of the hypothesis I want to check 
-#	\param class_type: of type string, the type of instance I want to check
-#       if already present
-#	\param name : of type string, the name of the entity I want to check
-#	\return : None
-# 	
-#	This function checks if a hint ( composed of an ID, class_type and name) 
-#   is already present in an hypothesis. If it is not present it adds it 
-#   to the ontology.
-def check_owl(ID,class_type,name):
-    try:
-        # it retrieves from the hypothesis ID the field identified by class_type
-        res_final=look_hypothesis(ID, class_type)
-        find = False
-        # if the name retrieved is different from the name received I add the hypothesis
-        # it adds it even if the retrieved field is empty
-        for i in res_final:
-
-            if i == name:
-                find = True
-
-        if find == False:
-            add_hypothesis(ID,class_type,name)
-            reason()
-    except rospy.ServiceException as e:
-        print(e)      
-
 
 
 def main():
