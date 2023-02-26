@@ -80,7 +80,7 @@ def loading_owl():
         req.primary_command_spec= 'FILE'
         req.secondary_command_spec= ''
 
-        req.args= ['/root/ros_ws/src/cluedo_ontology.owl', 'http://www.emarolab.it/cluedo-ontology', 'true', 'PELLET', 'true']
+        req.args= ['/root/ros_ws/src/exprolab_ass1/cluedo_ontology.owl', 'http://www.emarolab.it/cluedo-ontology', 'true', 'PELLET', 'true']
         # send the message on the server
         msg = armor_service(req)
         res=msg.armor_response
@@ -171,7 +171,7 @@ def already_received(data):
     if data[1]=='what':
         # checks every element of the array 'weapons'
         for i in range(len(weapons)):
-            if weapons[j]==data[2]:
+            if weapons[i]==data[2]:
                 received=True
         # if it has never been received I add it to the list
         if received==False:
@@ -181,7 +181,7 @@ def already_received(data):
     if data[1]=='where':
         # checks every element of the array locations
         for i in range(len(locations)):
-            if locations[k]==data[2]:
+            if locations[i]==data[2]:
                 received=True
         # if it has never been received I add it to the list
         if received==False:
