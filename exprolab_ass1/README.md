@@ -106,5 +106,14 @@ roslaunch exprolab_ass1 assignment.launch
 ```
 to launch all the nodes.
 
-## Future improvements
-Knowing already which would be the last assignment, I already managed tthe malformed hints in this branch (otherwise I would have not considered them, probably). A part from that, it would be nice to test this branch with a simulation environment instead of using simulated actions. 
+## Working Hypotesis and Environment
+The environment in which the robot moves is immaginary, so the robot's actions aren't real but just simulated. However, the node created are easily adaptable to a Gazebo simulation (for example) with the addition of some codes in the finite state machine.
+
+### System's Features
+The system is very modular, each node handles a different task: `oracle` gives the hints, `create_hypotesis` manages all the hint's aspects and `fsm` manage the robot's actions.
+
+### System's Limitations 
+The hints managed by the robot are complete (it can manage also malformed or empty hints, because I already know that it would be an aspect in the next assignments) but the ontology is not readable when updated and the terminal output is difficult to read if someone is not familiar with the smach output.
+
+### Possible Techical Improvements
+It would be nice to test this branch with a simulation environment instead of using simulated actions and it could be useful to have a more user friendly interface to manage the output of the various nodes. 
