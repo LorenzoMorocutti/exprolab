@@ -1,4 +1,42 @@
-#!/usr/bin/env python
+#! /usr/bin/env python
+
+## @package exprolab_ass3
+#
+#  \file FSM.py
+#  \brief Node that implements the smach state machine for the third assignment
+#
+#  \author Lorenzo Morocutti
+#  \version 1.0
+#  \date 20/2/2023
+#  \details
+#  
+#  Subscribes to: <BR>
+#       /hint
+#
+#  Publishes to: <BR>
+#		/cmd_vel
+#
+#  Services: <BR>
+#       None
+#
+#  Client Services: <BR>
+#       /hint
+#       /check
+#		/oracle_solution
+#		/print_result
+#
+#  Action Services: <BR>
+#       /move_base
+#
+#  Description: <BR>
+#    This node implements the the finite state machine, with the smach library, that
+#    manage the overall application. The logic is developed in four states and it's
+#    very simple: I go to a new room (the robot has to check all the rooms and can't 
+#    return to the same room twice) setting as a goal pose one of the rooms; then I 
+#    look for a hint (read all the markers near the robot) moving the arm, in order 
+#    to catch all the markers around the robot; if I have enough hint and a complete 
+#    hypotesys, I go home; if the hypotesis is consistent and complete, I try to guess
+#    the killer, where the murder has happened and with which weapon.
 
 import roslib
 import rospy
@@ -15,7 +53,6 @@ from exprolab_ass3.srv import print_res, print_resRequest, print_resResponse
 from std_msgs.msg import Bool
 from exprolab_ass3.msg import ErlOracle
 from exprolab_ass3.srv import Oracle, OracleRequest, OracleResponse
-#import exp_moveit 
 import moveit_commander
 import moveit_msgs.msg
 import math
@@ -34,6 +71,13 @@ hyp_received=[]
 
 
 def hint_callback(msg):
+
+##
+# \brief function that receives a hint
+# \param: msg of type EarloOracle.msg 
+# \return: None
+# This function make a hint request to receive a hint from the oracle
+
     req = hintRequest()
     req.ID = msg.ID
     req.key = msg.key
@@ -42,7 +86,16 @@ def hint_callback(msg):
     print("I received a hint")
     #print(str(req.ID) + req.key + req.value)'''
 
+
 def arm_mov():
+
+##
+# \brief function that move the robotic arm
+# \param: None 
+# \return: None
+# This function move the robotic arm thanks to the 'moveit' functions, it moves
+# the arm to the position set in the 'goal' array
+
     goal = group_cmd.get_current_joint_values()
     goal[1] = 0
     goal[2] = 0
@@ -57,32 +110,46 @@ def arm_mov():
 
 
 def look_around():
+
+##
+# \brief function that manage the motion of the robotic arm
+# \param: None 
+# \return: None
+# This function move the robotic arm low and high while rotating it,
+# in order to catch all the markers with the camera
+
     velocity = Twist()
     velocity.angular.z = 0.75
     vel_pub.publish(velocity)
     arm_mov()
     rospy.sleep(10)
-    # velocity.angular.z = -0.75
-    # vel_pub.publish(velocity)
-    # rospy.sleep(30)
     velocity.angular.z = 0.0
     vel_pub.publish(velocity)
     
 
 
-# define state Unlocked
+
 class Goto_new_room(smach.State):
+
+##
+# \brief this class implements the Go_to_new_room action
+# \param: None 
+# \return: the next state
+# This class implements the action of going to a new room, setting as goal the next room 
+# (chosen randomically)  and marking the rooms already visited
+
     def __init__(self):
         # initialisation function, it should not wait
         smach.State.__init__(self, 
                              outcomes=['Look_for_hint'])
         
     def execute(self, userdata):
-        # function called when exiting from the node, it can be blacking
+
         room_not_found = True
         room_to_do = False
         goal = MoveBaseGoal()
 
+        # choose a random room that is not already visited
         for i in range(0, 6):
             if(checked_room[i] == 0):
                 room_to_do = True
@@ -93,10 +160,11 @@ class Goto_new_room(smach.State):
 
         while(room_not_found):
             index_room = random.randint(0, 5)
-            if(checked_room[index_room] ==0 ):
+            if(checked_room[index_room] == 0):
                 room_not_found = False
                 checked_room[index_room] = 1
-        
+
+        #set the coordinates of the new room as goal       
         goal.target_pose.pose.orientation.w = 1
         goal.target_pose.header.frame_id = "map"
         goal.target_pose.pose.position.x = room_coordinates[index_room][0]
@@ -110,18 +178,23 @@ class Goto_new_room(smach.State):
 
 
 
-# define state Unlocked
+
 class Look_for_hint(smach.State):
+
+##
+# \brief this class implements the Looking_for_hint action
+# \param: None 
+# \return: the possible next state
+# This class implements the action of looking for a hint, in brief it moves the robotic arm
+# and check if it can make a complete and consistent hypotesis (in that case, it will go home)
+
     def __init__(self):
-        # initialisation function, it should not wait
         smach.State.__init__(self, 
                              outcomes=['Goto_new_room','Go_home'])
         
     def execute(self, userdata):
         global hyp_received, hyp_checked
         completed = False
-        # function called when exiting from the node, it can be blacking
-        #wait to see if any hint received
 
         look_around()
         
@@ -130,11 +203,14 @@ class Look_for_hint(smach.State):
         res_h = correct_hypResponse()
     
         res_h = check_client(req_h)
+
+        #split the fields of the hint at the '/' and remove ""
         temp = res_h.hypotesis.split("/")
         temp.remove("")
         print(temp)
         hyp_received.clear()
 
+        #if it's not an hypotesis I already checked, save it
         for i in range(len(temp)):
             temp[i] = int(temp[i])
 
@@ -146,6 +222,7 @@ class Look_for_hint(smach.State):
                 completed = True
         rospy.loginfo("hypothesis to check"+ str(hyp_checked))            
 
+        #if there is something to check, go home
         if completed:
             return 'Go_home'
         else:
@@ -153,6 +230,13 @@ class Look_for_hint(smach.State):
     
 
 class Go_home(smach.State):
+
+##
+# \brief this class implements the Go_home action
+# \param: None 
+# \return: the next state
+# This class implements the action of going home, setting as goal the home position 
+
     def __init__(self):
         # initialisation function, it should not wait
         smach.State.__init__(self, 
@@ -162,6 +246,7 @@ class Go_home(smach.State):
         # function called when exiting from the node, it can be blacking
         goal = MoveBaseGoal()
         
+        #set as goal, the coordinates of home
         goal.target_pose.pose.orientation.w = 1
         goal.target_pose.header.frame_id = "map"
         goal.target_pose.pose.position.x = 0.0
@@ -174,6 +259,15 @@ class Go_home(smach.State):
 
 
 class Check_result(smach.State):
+
+##
+# \brief this class implements the Check_result action
+# \param: None 
+# \return: exit if the hypotesis is correct, otherwise goto_new_room
+# This class implements the action of checking the result, in brief it checks if the
+# hypotesis is the winning one and, in that case, it prints the culprit, where the murder
+# has happened and the weapond; otherwise, it goes to a new room
+
     def __init__(self):
         # initialisation function, it should not wait
         smach.State.__init__(self, 
@@ -182,16 +276,18 @@ class Check_result(smach.State):
     def execute(self, userdata):
         # function called when exiting from the node, it can be blacking
 
+        #request to oracle to check the winning ID
         req=OracleRequest()
         res=OracleResponse()
 
-        print("I'm in check result")
+        #print("I'm in check result")
 
         res = result_client(req) 
         rospy.loginfo("result to check: "+ str(res.ID))
         for i in hyp_received:
             if res.ID == i:
                 req_print = print_resRequest()
+                req_print.ID=i
                 res_print = print_resResponse()
                 res_print = print_client(req_print)
                 rospy.loginfo("The killer was "+res_print.who+" in the "+res_print.where+" with the "+res_print.what)
@@ -204,6 +300,8 @@ class Check_result(smach.State):
             return 'Goal'
         else:
             return 'Goto_new_room'
+        
+
         
 def main():
     rospy.init_node('FSM')

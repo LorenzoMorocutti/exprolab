@@ -1,3 +1,34 @@
+/** @ package exprolab_ass3
+* 
+*  \file simulation.cpp
+*  \brief implements the 'simulation' node for the third assignment of the experimental robotics laboratory course
+*
+*  \author Lorenzo Morocutti
+*  \version 1.0
+*  \date 12/02/2023
+*  \details
+*   
+*  Subscribes to: <BR>
+*	None 
+*
+*  Publishes to: <BR>
+*	 None
+*
+*  Services: <BR>
+*    /oracle_hint
+*	 /oracle_solution
+* 
+*   Client Services: <BR>
+*   None
+*    
+*
+*  Action Services: <BR>
+*    None
+*
+*  Description: <BR>
+*  This node implements the simulation for the third assignment
+*/
+
 #include <ros/ros.h>
 #include <exprolab_ass3/ErlOracle.h>
 #include <exprolab_ass3/Oracle.h>

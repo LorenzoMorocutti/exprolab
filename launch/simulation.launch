@@ -52,7 +52,7 @@
   <!-- <node name="FSM"  pkg="exprolab_ass3" type="FSM.py" output="screen"/>  -->
   <!-- <node name="manage_hint"  pkg="exprolab_ass3" type="manage_hint.py" output="screen"/>  -->
 
-  <include file="$(find exp_moveit)/launch/demo_gazebo.launch"/>
+  <include file="$(find exprolab_ass3)/launch/demo_gazebo.launch"/>
 
   <remap from="scan" to="/m2wr/laser/scan"/>
   
