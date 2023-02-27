@@ -1,0 +1,11 @@
+moveit_setup_assistant_config:
+  URDF:
+    package: exprolab_ass2
+    relative_path: urdf/robot.urdf
+    xacro_args: ""
+  SRDF:
+    relative_path: config/m2wr.srdf
+  CONFIG:
+    author_name: Lorenzo Morocutti
+    author_email: lorenzo.morocutti@libero.it
+    generated_timestamp: 1675519870
