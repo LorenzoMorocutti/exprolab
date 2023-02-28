@@ -154,3 +154,4 @@ The video is split in two parts:
 
 
 ![video](images_videos/interesting_parts.mp4)
+ [video](https://www.youtube.com/watch?v=e6bZsWgrhO4)
