@@ -1,3 +1,34 @@
+/** @ package exprolab_ass2
+* 
+*  \file Checkhint.cpp
+*  \brief implements the 'check_hint' action
+*
+*  \author Lorenzo Morocutti
+*  \version 1.0
+*  \date 12/02/2023
+*  \details
+*   
+*  Subscribes to: <BR>
+*	/oracle_hint 
+*
+*  Publishes to: <BR>
+*	 None
+*
+*  Services: <BR>
+*    None
+* 
+*   Client Services: <BR>
+*   /hint
+*    
+*
+*  Action Services: <BR>
+*    None
+*
+*  Description: <BR>
+*  This node implements the 'check_hint' action to move the robotic arm to look for the hint. It uses
+*  the 'moveit' library to do so. 
+*/
+
 #include "exprolab_ass2/ActionInterface.h"
 #include <unistd.h>
 #include <actionlib/client/simple_action_client.h>
@@ -20,23 +51,36 @@ void receive_clbk(const exprolab_ass2::ErlOracle msg);
 
 
 namespace KCL_rosplan {
-CheckhintInterface::CheckhintInterface(ros::NodeHandle &nh) {
-// here the initialization
-}
+    CheckhintInterface::CheckhintInterface(ros::NodeHandle &nh) {
+    }
 
+    bool CheckhintInterface::concreteCallback(const rosplan_dispatch_msgs::ActionDispatch::ConstPtr& msg) {
+    
+    /**
+    * \brief: CheckhintInterface callback
+    * \param msg : the variables received from the plan dispatcher
+    * 
+    * \return true
+    * 
+    * This function calls the move_arm() function to move the robotic arm to look for the hint 
+    */
 
+        move_arm();
 
-bool CheckhintInterface::concreteCallback(const rosplan_dispatch_msgs::ActionDispatch::ConstPtr& msg) {
-// here the implementation of the action
-
-    move_arm();
-
-    return true;
-}
+        return true;
+    }
 }
 
 void receive_clbk(const exprolab_ass2::ErlOracle msg)
 {
+    /**
+    * \brief: Callback function that receives an hint
+    * \param msg : a message of the type ErlOracle
+    * 
+    * \return : None
+    * 
+    * This function is the manager of the hint received on the /oracle_hint topic  
+    */
     
     ros::NodeHandle n1;
     ros::ServiceClient hint_client = n1.serviceClient<exprolab_ass2::hint>("/hint");
@@ -44,17 +88,29 @@ void receive_clbk(const exprolab_ass2::ErlOracle msg)
     req.request.ID = msg.ID;
     req.request.key = msg.key;
     req.request.value = msg.value;
-    ROS_INFO("dovrei mandaee request");
+    //ROS_INFO("dovrei mandare request");
     hint_client.call(req);
     received = true;
 }
 
 void move_arm()
 {   
+    /**
+    * \param : None
+    * 
+    * \return : None
+    * 
+    * This function uses the 'moveit' services to move the robotic arm. If it receives an hint when it's 'high', it goes on;
+    * otherwise, it goes 'low' (the hint is either at 0.75 or 1.25)  
+    */
+
+   printf("sono dentro a move_arm");
+    
     if(high_pose)
     {
         if(received == false)
         {
+            printf("sono dentro a move_arm high_pose");
             geometry_msgs::Pose pose1;
 	        moveit::planning_interface::MoveGroupInterface group("arm");
 	        group.setEndEffectorLink("cluedo_link");
@@ -66,7 +122,7 @@ void move_arm()
 	        group.setGoalPositionTolerance(0.05);
 	        pose1.position.x = 0.0;
 	        pose1.position.y = 0.5;
-	        pose1.position.z = 0.75;
+	        pose1.position.z = 0.7;
 	        group.setStartStateToCurrentState();
 	        group.setApproximateJointValueTarget(pose1, "cluedo_link");
 	        moveit::planning_interface::MoveGroupInterface::Plan plan;
@@ -83,6 +139,7 @@ void move_arm()
     {
         if(received == false)
         {
+            printf("sono dentro a move_arm low_pose");
             geometry_msgs::Pose pose1;
 	        moveit::planning_interface::MoveGroupInterface group("arm");
 	        group.setEndEffectorLink("cluedo_link");

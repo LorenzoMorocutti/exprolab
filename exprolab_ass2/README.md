@@ -20,38 +20,32 @@ In the repository it's possible to find:
 ## Software Architecture
 We can see in the image below the component diagram of the software:
 
-![immagine](images/component_diagram.jpg)
+![immagine](images_videos/component_diagram.jpeg)
 
 * **node_hint**: The `node_hint` node implements the node that receives the hint from the oracle and saves it in the ontology. The armor node will tell us if the hint is malformed or valid. It also implements the checking of the completeness and consistency of the hypothesis. Eventually retrieves the field of an hypothesis from the ontology, given an ID;
 * **generation_problem**: The `generation_problem` node implements the various calls to ROSplan to generate the plan run by the robot. It requests feedback from the plan and produces new plans until the goal is reached. It also updates the knowedge base;
 * **go_to_point**: The `go_to_point` node controls the behavior of the robot according to the go_to_point behavior via an action server. A FSM is used to model the behavior every time a new goal pose is received: firstly the robot alight its position with the goal's one, then it goes straight to the goal position, it aligns with the goal orientation and then the goal pose is reached;
-* **Moveto**: This node implements the 'move_to' pddl action to a waypoint. This is possible thanks to the go_to_point node;
-* **Moveaway**: This node implements the 'move_away_from_home' pddl action to move the robot from home to the waypoint chosen by the planner. This is possible thanks to the go_to_point node;
-* **Movehome**: This node implements the 'move_home' pddl action to return to the home waypoint. This is possible thanks to the go_to_point node;
-* **Checkhint**: This node implements the 'check_hint' pddl action to move the robotic arm to look for the hint. It uses the 'moveit' library to do so;
-* **Checkcomplete**: This node implements the 'check_complete_hypotesis' pddl action to check if the passed hypotesis is complete and consistent;
-* **Checkresult**: This node implements the 'check_result' pddl action to check if the complete hypotesis is the correct one and, in that case, print the solution.
+* **Moveto**: The `Moveto` node implements the 'move_to' pddl action to a waypoint. This is possible thanks to the go_to_point node;
+* **Moveaway**: The `Moveaway` node implements the 'move_away_from_home' pddl action to move the robot from home to the waypoint chosen by the planner. This is possible thanks to the go_to_point node;
+* **Movehome**: The `Movehome` node implements the 'move_home' pddl action to return to the home waypoint. This is possible thanks to the go_to_point node;
+* **Checkhint**: The `Checkhint` node implements the 'check_hint' pddl action to move the robotic arm to look for the hint. It uses the 'moveit' library to do so;
+* **Checkcomplete**: The `Checkcomplete` node implements the 'check_complete_hypotesis' pddl action to check if the passed hypotesis is complete and consistent;
+* **Checkresult**: The `Checkresult` node implements the 'check_result' pddl action to check if the complete hypotesis is the correct one and, in that case, print the solution.
 * **ARMOR**: The `ARMOR` node is the one that "answers" to all the requests that comes from the node_hint about the ontology and management of the hypotesis.
 
 In the image is also possible to see which services/topics are used to communicate between the nodes (the lollipop is used for the services while the double arrow is used for the topics of the publishers/subscribers).
 
-About the nodes, it is been also reported the rqt_graph in which are seen only the topics of he publishers/subscribers:
+About the nodes, it is been also reported the rqt_graph in which are seen only the topics of the publishers/subscribers:
 
-![immagine](images/rqt_graph.jpeg)
-
-### State diagram
-In the following image is reported the state diagram, that is the description of the connections between the states of the fsm:
-
-![immagine](images/state_diagram.jpeg)
-
-The robot starts in the *Goto_new_room* state, that in our application is basically a sleep (it should simulates the time the robot needs to change the room); then we always go to the *Look_for_hint* states where we receive a hint from the oracle and, if it has enough hints to make a complete hypotesis, it goes home, otherwise it returns to the goto_new_rom state; if the hypotesis is complete and consistent we want to check if it's the winning one, so we return home thanks to the *Go_home* state, that is again a simulation of the movement of returning home (implemented by a sleep); finally, in *Check_result* we confirms if the hypotesis is the winning one and if it is the goal is reached and we can exit the state machine, otherwise we return to goto_new_room to look for other hints.
+![immagine](images_videos/rqt_graph.jpeg)
 
 ### Temporal diagram
 In the following image is represented the temporal diagram, of the software:
 
-![immagine](images/temporal_diagram.jpg)
+![immagine](images_videos/temporal_diagram.jpeg)
 
-It shows in a explicit way the temporal connections of the nodes: we can see that everything starts at the FSM node and ends there. The temporal passagges (when the services/topics are called) are to be read from the top to bottom of the diagram (the upper one is the first step, the lower one is the last).
+It shows in a explicit way the temporal connections of the nodes: we can see that the the structure follows linearly the execution of the plan. There are also the `Moveit` and `Go_to_point` nodes that have been reported to clarify when they are called and used. The create hypotesis and simulation nodes are called a lot of times so, to not make the diagram really heavy to read, I didn't inserted them (still in the *component_diagram* we can see when the services are called). 
+The temporal passagges are to be read from the top to bottom of the diagram (the upper one is the first step, the lower one is the last).
 
 ### Actions
 The only action used in the software is *Moving*, that contains all the information about the goal position and the robot position:
@@ -122,3 +116,41 @@ Relative to the planning part, there are the following files:
 * `new_problem`: in the folder *common*, the problem generated by ROSplan (same as the file afore mentioned);
 * `plan`: in the folder *common*, the plan we want to follow (id something goes wrong, we have to replan). This file can change during the execution of the plan.
 
+The plan dispatched has a form of the type:
+
+![immagine](images_videos/plan_dispatched.jpeg)
+
+We can see that there are instantiated all the objects used in the plan:
+* `w1`, `w2`, `w3`, `w4`: the waypoints, that corresponds to  the coordinates specified in *Moveto*;
+* `start`: the coordinates of *home*;
+* `robot`: the agent used in the plan.
+
+### Simulation
+In this section are reported some screenshots of the terminal and a brief video of the simulation with some interesting aspects.
+First of all, we can encounter different kind of hints:
+* good hint:
+
+    ![immagine](images_videos/good_hint.jpeg)
+
+    In this specific case we received an hint corresponding to the ID 5 (where, study). We can see also the output of the ROSplan, where we can see a `check_hint` action dispatched and executed (so w1 is checked) and the dispatching of the next action `move_to`;
+
+* malformed hint:
+
+    ![immagine](images_videos/malformed_hint.jpeg)
+
+    In this case, it will appear on the terminal that "key is empty or malformed" so one of the fields of the hint are empty or equal to "-1";
+
+* end game with the print:
+
+    ![immagine](images_videos/end_game.jpeg)
+
+    In the image we can see the dispatching and execution of the `move_home` and `check_result` actions, with the printing of the winner (corresponding to ID 3).
+
+
+I report also a video that I will briefly explain to make clear what I would like to show.
+The video is split in two parts:
+* first part: I want to show, in the gazebo simulation how the robot approaches a waypoint and how it moves the arm in a lower position (thanks to `Moveit`). The video is sped up because it's a slow movement;
+* second part: not sped up because I just want to show how the "real" simulation environment (we can look at it in the Rviz tab) is. There are 4 green spheres, that can be high (height od 1.25) or low (height of 0.75), that contains an hint: the robot has to go through it to catch the hint. The spheres are near the waypoint that the robot has to reach.
+
+
+![video](images_videos/interesting_parts.mp4)

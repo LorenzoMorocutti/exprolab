@@ -1,3 +1,34 @@
+/** @ package exprolab_ass2
+* 
+*  \file simulation.cpp
+*  \brief implements the 'simulation' node for the second assignment of the experimental robotics laboratory course
+*
+*  \author Lorenzo Morocutti
+*  \version 1.0
+*  \date 12/02/2023
+*  \details
+*   
+*  Subscribes to: <BR>
+*	None 
+*
+*  Publishes to: <BR>
+*	 None
+*
+*  Services: <BR>
+*    /oracle_hint
+*	 /oracle_solution
+* 
+*   Client Services: <BR>
+*   None
+*    
+*
+*  Action Services: <BR>
+*    None
+*
+*  Description: <BR>
+*  This node implements the simulation for the second assignment
+*/
+
 #include <ros/ros.h>
 #include <gazebo_msgs/LinkStates.h>
 #include <visualization_msgs/MarkerArray.h>
@@ -42,6 +73,7 @@ bool oracleService(exprolab_ass2::Oracle::Request &req, exprolab_ass2::Oracle::R
 
 void oracleCallback(const gazebo_msgs::LinkStates::ConstPtr& msg)
 {
+	printf("sono dentro oracle_callback");
    for(int i=0; i< msg->name.size(); i++){
 	   if (msg->name[i].find("cluedo_link")!= std::string::npos){
 		   for(int j=0; j<4;j++){
