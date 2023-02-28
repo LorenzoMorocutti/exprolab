@@ -152,5 +152,4 @@ The video is split in two parts:
 * first part: I want to show, in the gazebo simulation how the robot approaches a waypoint and how it moves the arm in a lower position (thanks to `Moveit`). The video is sped up because it's a slow movement;
 * second part: not sped up because I just want to show how the "real" simulation environment (we can look at it in the Rviz tab) is. There are 4 green spheres, that can be high (height od 1.25) or low (height of 0.75), that contains an hint: the robot has to go through it to catch the hint. The spheres are near the waypoint that the robot has to reach.
 
-
- ![video](https://www.youtube.com/watch?v=e6bZsWgrhO4)
+[video](https://www.youtube.com/watch?v=e6bZsWgrhO4)
