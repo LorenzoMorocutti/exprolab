@@ -1,5 +1,0 @@
-int32 ID
----
-string who
-string what
-string where
