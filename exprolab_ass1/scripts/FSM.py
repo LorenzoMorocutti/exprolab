@@ -31,9 +31,9 @@
 #    This node implements the the finite state machine, with the smach library, that
 #    manage the overall application. The logic is developed in four states and it's
 #    very simple: I go to a new room (independently of where I am, in this case); then I 
-#    look for a hint; if I have enough hint, I go home and try to make a hypotesys;
-#    if the hypotesis is consistent and complete, I try to guess the killer, where 
-#    the murder has happened and with which weapon.
+#    look for a hint and if I can make a complete and consistent hypotesis, I go home;
+#    eventually I try to guess the killer, where the murder has happened and with which weapon
+#    (check if the hypotesis is the correct one).
 
 
 import roslib
@@ -64,7 +64,7 @@ def hint_callback(msg):
 # \brief function that receives a hint
 # \param: msg of type EarloOracle.msg 
 # \return: None
-# This function make a hint request and saves the fields in the variable req
+# This function make a hint request to receive a hint from the oracle
 
     req = hintRequest()
     req.ID = msg.ID
