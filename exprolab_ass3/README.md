@@ -112,7 +112,7 @@ In this image I want to show that, when there is a hypotesis complete to check, 
 
 In the second image is possible to see the final result (after a checking of the winning id, to be sure that it's the correct hypotesis), where the state change from *go_home* to *check_result* and eventually (if the hypotesis is not correct, it would just return to *goto_new_room*) to *Goal* that is the exit of the state machine:
 
-![immagine](images_videos/check_result.jpeg.jpeg)
+![immagine](images_videos/check_result.jpeg)
 
 The ID: 0 was the correct answer, so we can also see the final print of the culprit.
 
