@@ -166,7 +166,7 @@ to launch all the nodes.
 I chose to manage all the launching like this because (personal opinion) it's easier to monitor the changes of the state machine and the hint received (we can look at them in the manage_hint tab).
 
 ## Working Hypotesis and Environment
-The environment in which the robot moves is a Gazebo simulation. As the previous assignment, the hints are given by the author professor [Carmine Recchiutto](http://github.com/CarmineD8), so I just had to deal with them (by reading the markers and then retrieving the hint). All about the hints remains valid from the first two assignments.
+The environment in which the robot moves is a Gazebo simulation. As the previous assignment, the hints are given by the author professor [Carmine Recchiuto](http://github.com/CarmineD8), so I just had to deal with them (by reading the markers and then retrieving the hint). All about the hints remains valid from the first two assignments.
 
 ### System's Features
 The architecture is definitely modular: each node execute small task, so we can change them to adapt the software to new implementations (basically I reused a lot of code from the first assignment, the manage of the hints by node_hint is the exact same). The system is thus very robust. 
