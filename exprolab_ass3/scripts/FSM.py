@@ -59,7 +59,6 @@ import math
 
 id_win = 1
 
-hint_client=None
 check_client=None
 vel_pub = None
 
@@ -68,23 +67,6 @@ room_coordinates = [ [-4, -3], [-4, 2], [-4, 7], [5, -7], [5, -3], [5, 1] ]
 checked_room = [0, 0, 0, 0, 0, 0]
 hyp_checked=[]
 hyp_received=[]
-
-
-def hint_callback(msg):
-
-##
-# \brief function that receives a hint
-# \param: msg of type EarloOracle.msg 
-# \return: None
-# This function make a hint request to receive a hint from the oracle
-
-    req = hintRequest()
-    req.ID = msg.ID
-    req.key = msg.key
-    req.value = msg.value
-    hint_client(req)
-    print("I received a hint")
-    #print(str(req.ID) + req.key + req.value)'''
 
 
 def arm_mov():
@@ -329,7 +311,6 @@ def main():
     
     vel_pub = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
 
-    rospy.Subscriber("/hint", ErlOracle, hint_callback)
     # Create a SMACH state machine
     sm = smach.StateMachine(outcomes=['Goal'])
     sm.userdata.sm_counter = 0
