@@ -1,0 +1,9 @@
+<map id="include/exprolab_ass2/ActionInterface.h" name="include/exprolab_ass2/ActionInterface.h">
+<area shape="rect" id="node1" title=" " alt="" coords="441,5,607,47"/>
+<area shape="rect" id="node2" href="$_checkcomplete_8cpp.html" title="implements the &#39;check_complete_hypotesis&#39; action" alt="" coords="5,95,179,121"/>
+<area shape="rect" id="node3" href="$_checkhint_8cpp.html" title="implements the &#39;check_hint&#39; action" alt="" coords="203,95,341,121"/>
+<area shape="rect" id="node4" href="$_checkresult_8cpp.html" title="implements the &#39;check_result&#39; action" alt="" coords="365,95,515,121"/>
+<area shape="rect" id="node5" href="$_moveaway_8cpp.html" title=" " alt="" coords="539,95,680,121"/>
+<area shape="rect" id="node6" href="$_movehome_8cpp.html" title="implements the &#39;move_home&#39; action" alt="" coords="705,95,850,121"/>
+<area shape="rect" id="node7" href="$_moveto_8cpp.html" title="implements the &#39;move_away_from_home&#39; action" alt="" coords="874,95,995,121"/>
+</map>
