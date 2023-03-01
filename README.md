@@ -29,7 +29,7 @@ source script.sh
 The `exp_moveit` folder is the folder containing all the scipts and cpp files needed to maneuver the robot od the simulation.
 
 ## Working Hypotesis and Environment
-The environment in which the robot moves is a Gazebo simulation. In this case the hints are given by the author professor [Carmine Recchiutto](http://github.com/CarmineD8), so I just had to deal with them (by receiving them on /oracle_hint). ALl about the hint remains valid from the first assignment.
+The environment in which the robot moves is a Gazebo simulation. In this case the hints are given by the author professor [Carmine Recchiuto](http://github.com/CarmineD8), so I just had to deal with them (by receiving them on /oracle_hint). ALl about the hint remains valid from the first assignment.
 
 ### System's Features
 The architecture is definitely modular (let's just think about all the pddl actions that execute a single task, so we can change a small piece of the application modifying one of them). The system is very robust thanks to the ROSplan features that allow the software to replan in the case something unexpected (or just if it doesn't reach the goal the first time) happens.
