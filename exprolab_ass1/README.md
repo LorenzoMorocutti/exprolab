@@ -1,5 +1,5 @@
 # Experimental Robotics Laboratory
-This is the repository for the first assignment of he experimental robotics course of Unige.
+This is the repository for the first assignment of the experimental robotics course of Unige.
 
 ## Description of the repository
 In the repository it's possible to find:
